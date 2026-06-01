@@ -1,121 +1,101 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from "react"
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [file, setFile] = useState(null)
+  const [speed, setSpeed] = useState(100)
+  const [emax, setEmax] = useState(6)
+  const [result, setResult] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!file) return
+
+    setLoading(true)
+    setError(null)
+    setResult(null)
+
+    const form = new FormData()
+    form.append('file', file)
+    form.append('design_speed', speed)
+    form.append('emax', emax)
+
+    try {
+      const res = await fetch('/api/check/', {method: 'POST', body: form})
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Request failed")
+      setResult(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+
+  }
+
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+    <div>
+      <h1>Road Geometry Checker</h1>
+      <p>Selected file: {file ? file.name : 'none'}</p>
+    
+      <form onSubmit={handleSubmit}>
+        <input type ="file" onChange={e => setFile(e.target.files[0])} />
+        <select value={speed} onChange={e => setSpeed(Number(e.target.value))}>
+          {[40, 50, 60, 70, 80, 100].map(s => (<option key={s} value ={s}>
+            {s} km/h
+            </option>))}
+        </select>
+
+        <select value={emax} onChange={e => setEmax(Number(e.target.value))}>
+          <option value={6}>emax 6%</option>
+          <option value={7}>emax 7%</option>
+          <option value={10}>emax 10%</option>
+        </select>
+        <button type="submit" disable={loading || !file}>
+          {loading ? 'Checking...' : 'Run Checks'}
         </button>
-      </section>
+      </form>
 
-      <div className="ticks"></div>
+      {error && <p style={{ color: 'red'}}>{error}</p>}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      {result && (
+        <div>
+          <h2>{result.alignment.name}</h2>
+          <p> Chainage {result.alignment.start_chainage} - {result.alignment.end_chainage}</p>
+          <p> Pass: {result.summary.pass} | Fail: {result.summary.faul} | Warning: {result.summary.warning}</p> 
+
+          <table>
+            <thead>
+              <tr> 
+                <th>Element</th>
+                <th>Check</th>
+                <th>Value</th>
+                <th>Limit</th>
+                <th>Status</th>
+                <th>Clause</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.results.map(r => (
+                <tr key={r.id}>
+                  <td>{r.element}</td>
+                  <td>{r.check}</td>
+                  <td>{r.value}</td>
+                  <td>{r.limit}</td>
+                  <td>{r.status.toUpperCase()}</td>
+                  <td>{r.clause}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    </div>
   )
 }
 
