@@ -9,6 +9,7 @@ from rest_framework import status
 
 from .parsers.parse_12d_html import parse_12d_html
 from .checks.horizontal import check_horizontal_alignment
+from .checks.vertical import check_vertical_alignment
 
 VALID_SPEEDS = {30, 40, 50, 60, 70, 80, 90, 100}
 VALID_EMAX = { 6, 7, 10}
@@ -53,8 +54,11 @@ def check_road_geometry(request):
 
     try:
         horizontal_results = check_horizontal_alignment(alignment_data, speed, emax)
+        vertical_results = check_vertical_alignment(alignment_data, speed, emax, )
     except Exception as e:
-        return Respone({'error': f'Check failed: {str(e)}'}, status = 500)
+        return Response({'error': f'Check failed: {str(e)}'}, status = 500)
+
+    all_results = horizontal_results + vertical_results
 
     return Response({
         'alignment': {
@@ -65,11 +69,11 @@ def check_road_geometry(request):
             'end_chainage': alignment_data['end_chainage'],
             'warnings': alignment_data['warnings'],
         },
-        'results': horizontal_results,
+        'results': all_results,
         'summary': {
-            'total_checks': len(horizontal_results),
-            'pass':    sum(1 for r in horizontal_results if r['status'] == 'pass'),
-            'fail':    sum(1 for r in horizontal_results if r['status'] == 'fail'),
-            'warning': sum(1 for r in horizontal_results if r['status'] == 'warning'),
+            'total_checks': len(all_results),
+            'pass':    sum(1 for r in all_results if r['status'] == 'pass'),
+            'fail':    sum(1 for r in all_results if r['status'] == 'fail'),
+            'warning': sum(1 for r in all_results if r['status'] == 'warning'),
         }
     })

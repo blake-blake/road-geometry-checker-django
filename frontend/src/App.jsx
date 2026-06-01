@@ -7,6 +7,8 @@ function App() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [roadSurface, setRoadSurface] = useState('unsealed')
+  const [objectHeight, setObjectHeight] = useState(0)
 
 
   async function handleSubmit(e) {
@@ -21,6 +23,7 @@ function App() {
     form.append('file', file)
     form.append('design_speed', speed)
     form.append('emax', emax)
+    form.append('road_surface', roadSurface)
 
     try {
       const res = await fetch('/api/check/', {method: 'POST', body: form})
@@ -54,6 +57,17 @@ function App() {
           <option value={7}>emax 7%</option>
           <option value={10}>emax 10%</option>
         </select>
+
+        <select value = {roadSurface} onChange={e => setRoadSurface(e.target.value)}>
+          <option value={'unsealed'}>Unsealed Road</option>
+          <option value={'sealed'}>Sealed Road</option>
+        </select>
+
+        <select value={objectHeight} onChange={e => setObjectHeight(Number(e.target.value))}>
+          <option value={0}>Object height 0m (ASD)</option>
+          <option value={0.2}>Object height 0.2m (SSD)</option>
+        </select>
+
         <button type="submit" disable={loading || !file}>
           {loading ? 'Checking...' : 'Run Checks'}
         </button>
@@ -65,7 +79,7 @@ function App() {
         <div>
           <h2>{result.alignment.name}</h2>
           <p> Chainage {result.alignment.start_chainage} - {result.alignment.end_chainage}</p>
-          <p> Pass: {result.summary.pass} | Fail: {result.summary.faul} | Warning: {result.summary.warning}</p> 
+          <p> Pass: {result.summary.pass} | Fail: {result.summary.fail} | Warning: {result.summary.warning}</p> 
 
           <table>
             <thead>
@@ -85,7 +99,7 @@ function App() {
                   <td>{r.check}</td>
                   <td>{r.value}</td>
                   <td>{r.limit}</td>
-                  <td>{r.status.toUpperCase()}</td>
+                  <td style={{ color: r.status === 'fail' ? 'red' : 'inherit'}}>{r.status.toUpperCase()}</td>
                   <td>{r.clause}</td>
                 </tr>
               ))}

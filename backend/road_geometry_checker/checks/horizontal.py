@@ -32,7 +32,7 @@ def check_horizontal_alignment(data, speed, emax, ip_speed_overrides = None):
         ip_speed = ip_speed_overrides.get(ip['id'], speed)
         min_r = get_min_radius(ip_speed, emax)
         min_trans = get_min_transition_length(ip_speed, ip['radius'])
-        label = f"IP {ip['id']}"
+        label = f"H{ip['id']}"
 
         results.append({
             'id': _id(),
@@ -40,23 +40,11 @@ def check_horizontal_alignment(data, speed, emax, ip_speed_overrides = None):
             'element': label,
             'check': 'Minimum curve radius (absolute)',
             'value': f"{ip['radius']} m",
-            'limit': f"≥ {min_r['absolute']} m ({emax_label})",
-            'status': 'pass' if ip['radius'] >= min_r['absolute'] else 'fail',
+            'limit': f"≥ {min_r} m ({emax_label})",
+            'status': 'pass' if ip['radius'] >= min_r else 'fail',
             'clause': clause,
             'notes': None,
         })
 
-        if min_r['absolute'] <= ip['radius'] < min_r['desirable']:
-            results.append({
-                'id': _id(),
-                'category': 'Horizontal Alignment',
-                'element': label,
-                'check': 'Minimum curve radius (desirable)',
-                'value': f"{ip['radius']} m",
-                'limit': f"≥ {min_r['desirable']} m ({emax_label})",
-                'status': 'warning',
-                'clause': clause,
-                'notes': 'Radius meets absolute minimum but not desirable. Justification required.',
-            })
 
     return results
