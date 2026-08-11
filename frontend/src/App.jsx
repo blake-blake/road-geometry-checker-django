@@ -9,6 +9,7 @@ function App() {
   const [error, setError] = useState(null)
   const [roadSurface, setRoadSurface] = useState('unsealed')
   const [objectHeight, setObjectHeight] = useState(0)
+  const [vehicles, setVehicles] = useState([])
 
 
   async function handleSubmit(e) {
@@ -24,6 +25,8 @@ function App() {
     form.append('design_speed', speed)
     form.append('emax', emax)
     form.append('road_surface', roadSurface)
+    form.append('object_height', objectHeight)
+    form.append('vehicles', JSON.stringify(vehicles))
 
     try {
       const res = await fetch('/api/check/', {method: 'POST', body: form})
@@ -36,6 +39,19 @@ function App() {
       setLoading(false)
     }
 
+  }
+
+  const vehicleOptions = {
+    sealed: ['LME', 'Trucks', 'RAV-4S'],
+    unsealed: ['LME', 'Trucks', 'HME'],
+  }
+
+  function handleVehicleToggle(vehicle) {
+    if (vehicle === 'HME'){
+      setVehicles(prev => prev.includes('HME') ? [] : ['HME'])
+    } else {
+      setVehicles(prev => prev.includes(vehicle) ? prev.filter(v => v !== vehicle) : [...prev.filter(v =>v !=='HME' ), vehicle])
+    }
   }
 
 
@@ -58,10 +74,24 @@ function App() {
           <option value={10}>emax 10%</option>
         </select>
 
-        <select value = {roadSurface} onChange={e => setRoadSurface(e.target.value)}>
+        <select value = {roadSurface} onChange={e => {setRoadSurface(e.target.value); setVehicles([]);}}>
           <option value={'unsealed'}>Unsealed Road</option>
           <option value={'sealed'}>Sealed Road</option>
         </select>
+        
+        <div>
+          {vehicleOptions[roadSurface].map(v => (
+            <label key={v}>
+              <input
+                type="checkbox"
+                checked={vehicles.includes(v)}
+                onChange={() => handleVehicleToggle(v)}
+              />
+              {v}
+            </label>
+          ))}
+        </div>
+
 
         <select value={objectHeight} onChange={e => setObjectHeight(Number(e.target.value))}>
           <option value={0}>Object height 0m (ASD)</option>
